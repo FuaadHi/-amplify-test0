@@ -6,6 +6,7 @@ import type { Schema } from "@/amplify/data/resource";
 import "./../app/app.css";
 import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
+import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 
 Amplify.configure(outputs);
@@ -13,12 +14,18 @@ Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 export default function App() {
+
+
+  const { signOut } = useAuthenticator();
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
   function listTodos() {
     client.models.Todo.observeQuery().subscribe({
       next: (data) => setTodos([...data.items]),
     });
+  }
+  function deleteTodo(id: string) {
+    client.models.Todo.delete({ id });
   }
 
   useEffect(() => {
@@ -37,10 +44,13 @@ export default function App() {
       <button onClick={createTodo}>+ new</button>
       <ul>
         {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
+          <li key={todo.id}>{todo.content}
+            <button onClick={() => deleteTodo(todo.id)} style={{ "backgroundColor": "red" }}> Delete </button>
+          </li>
         ))}
       </ul>
       <div>
+        <button onClick={() => signOut()} style={{ "backgroundColor": "red" }}>Sign Out</button>
         🥳 App successfully hosted. Try creating a new todo.
         <br />
         <a href="https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/">
